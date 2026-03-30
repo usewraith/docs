@@ -1,0 +1,79 @@
+---
+title: "AutoFix"
+description: "Automatic code fix generation with verification and GitHub PR creation."
+---
+
+AutoFix generates code patches for verified incidents, runs them through a verification pipeline, and opens GitHub pull requests — all automatically.
+
+## How it works
+
+<Steps>
+  <Step title="Incident qualifies">
+    AutoFix runs when an incident is escalated with sufficient confidence and the failure type is a logic regression or schema drift.
+  </Step>
+  <Step title="Commit bisection">
+    Wraith searches recent commits to find the one that introduced the regression. It uses an adaptive window — starting at 7 days, expanding to 30, then 90 if needed. Each commit is scored by risk signals.
+  </Step>
+  <Step title="Context compilation">
+    Builds a complete context pack: incident details, traces, affected code paths, dependency graph, and dangerous commits.
+  </Step>
+  <Step title="Patch generation">
+    AI generates a code patch based on the compiled context and root cause evidence.
+  </Step>
+  <Step title="Verification">
+    The patch is verified through multiple checks:
+    - Type checking
+    - Unit tests
+    - Regression tests
+    - Full verification pass
+
+    If any step fails, the patch is rejected.
+  </Step>
+  <Step title="PR creation">
+    If verified, a GitHub pull request is created with:
+    - Root cause explanation
+    - Fix description
+    - Verification results
+    - Link back to the incident
+  </Step>
+</Steps>
+
+## Pipeline stages
+
+The AutoFix tab on each incident shows a progress tracker:
+
+| Stage | Description |
+|-------|-------------|
+| `QUEUED` | Waiting to start |
+| `CONTEXT_BUILT` | Context pack compiled |
+| `PATCH_READY` | Code patch generated |
+| `VERIFYING` | Running verification checks |
+| `VERIFIED` | All checks passed |
+| `PR_CREATED` | GitHub PR opened |
+
+## Dangerous commits
+
+When Wraith identifies suspicious commits through bisection, they're displayed with:
+- **Risk score** — based on file change size, test coverage, and dependency impact
+- **LLM analysis** — AI explanation of why the commit is risky
+- **Investigation steps** — suggested actions for the team
+
+## Enabling AutoFix
+
+AutoFix is controlled by your Wraith administrator. It requires:
+1. GitHub integration connected via **Settings > Integrations**
+2. Services mapped to repositories
+3. AutoFix mode enabled on the deployment
+
+<Warning>
+  AutoFix only creates pull requests — it never deploys code. Every fix requires human review and merge.
+</Warning>
+
+## Sandboxes
+
+For incidents where you want to verify a fix manually, you can create a **sandbox** — an isolated environment where you can test changes before merging.
+
+- Create from the incident detail page
+- Run multiple iterations with different approaches
+- Compare results across iterations
+- Track cost per sandbox

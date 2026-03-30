@@ -1,0 +1,91 @@
+---
+title: "Incidents"
+description: "How to view, investigate, and resolve incidents in the Wraith dashboard."
+---
+
+The Incidents page is your primary workspace. Every alert that Wraith classifies as real becomes an incident with full investigation context.
+
+## Incident list
+
+The live incident feed shows all incidents with real-time updates.
+
+**Filters:** All, Escalated, Resolved, Suppressed
+
+**Search** by service name, summary text, or incident ID.
+
+**Metrics at a glance:** total incidents, escalated count, resolved count, suppressed count, and active fixes.
+
+## Incident detail
+
+Click any incident to open the detail view with five tabs.
+
+<Tabs>
+  <Tab title="Overview">
+    The overview gives you the full picture at a glance:
+
+    - **Status and confidence** — how certain Wraith is about the verdict
+    - **Pipeline status** — which layers have completed (triage, investigation, verification, autofix)
+    - **Failure cascade graph** — interactive visualization showing how the failure propagated through your services
+    - **AI analysis** — executive summary, root cause explanation, and recommended next steps
+    - **Key findings** — failure type, suspected component, and whether the issue was reproduced
+    - **Grouped alerts** — if multiple monitoring tools fired for the same issue, they're grouped here
+    - **Timeline** — chronological list of every event in the incident lifecycle
+  </Tab>
+  <Tab title="Evidence">
+    The evidence collected during investigation:
+
+    - **Hypothesis breakdown** — ranked hypotheses from the investigation plan
+    - **Quality metrics** — outbound match rate, DB match rate, non-determinism penalties
+    - **Top verification attempts** — ranked by quality score
+    - **Drift analysis** — summary of expected vs actual behavior
+    - **Log-based RCA** — root cause analysis from application logs
+    - **Failure type and confidence** — what type of failure and how confident the analysis is
+  </Tab>
+  <Tab title="Logs">
+    Two types of logs:
+
+    **Pipeline execution logs** — step-by-step progress through the incident pipeline with color-coded status indicators, duration tracking, and auto-scroll.
+
+    **Session replays** — if captured, you can play back the exact browser session that experienced the error. Includes:
+    - Play/pause with adjustable speed (0.5x – 2x)
+    - User action breadcrumbs (clicks, navigation, input, scrolls, errors)
+    - Interactive timeline seeking
+    - Error point highlighting
+  </Tab>
+  <Tab title="AutoFix">
+    When AutoFix runs, this tab shows the fix pipeline:
+
+    - **Progress tracker** — QUEUED → CONTEXT_BUILT → PATCH_READY → VERIFYING → VERIFIED → PR_CREATED
+    - **Divergence view** — expected vs actual code behavior causing the failure
+    - **Dangerous commits** — risk-scored commits identified by bisection, with LLM analysis
+    - **Pull request link** — direct link to the generated GitHub PR
+    - **Cost estimate** — credits consumed by the fix attempt
+  </Tab>
+  <Tab title="Assistant">
+    After investigation completes, an AI assistant is available to answer questions about the incident. It has full context — evidence, root cause, traces, and fix history.
+  </Tab>
+</Tabs>
+
+## Incident actions
+
+| Action | What it does |
+|--------|-------------|
+| **Resolve** | Mark the incident as fixed. Unlocks the feedback panel. |
+| **Suppress** | Mark as noise or false positive. Wraith learns from this. |
+| **Feedback** | Rate whether the root cause was correct and add notes. Improves future triage. |
+| **View PR** | Jump to the AutoFix pull request on GitHub |
+| **Open Sandbox** | Create a sandbox environment for manual verification |
+
+## Incident statuses
+
+| Status | Meaning |
+|--------|---------|
+| `RECEIVED` | Alert received, pipeline starting |
+| `INVESTIGATING` | Pipeline is running |
+| `ESCALATED` | Confirmed real incident — needs attention |
+| `SUPPRESSED` | Classified as noise or duplicate |
+| `RESOLVED` | Fixed by the team |
+
+<Tip>
+  Providing feedback after resolving incidents helps Wraith improve. The more feedback you give, the better triage becomes.
+</Tip>

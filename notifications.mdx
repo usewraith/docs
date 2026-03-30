@@ -1,0 +1,53 @@
+---
+title: "Notifications"
+description: "Get notified about incidents via Slack and PagerDuty."
+---
+
+Wraith sends notifications when incidents are escalated, fixes are completed, or runbooks execute.
+
+## Slack
+
+<Steps>
+  <Step title="Connect Slack">
+    Go to **Settings > Integrations > Slack** and click **Install**. Complete the OAuth flow to authorize Wraith in your workspace.
+  </Step>
+  <Step title="Choose a channel">
+    Select which Slack channel receives incident notifications.
+  </Step>
+</Steps>
+
+**What gets sent:**
+- Escalated incidents with severity, service name, and root cause summary
+- AutoFix PR notifications with link to the pull request
+- Runbook execution results
+
+<Info>
+  Alternatively, set a `SLACK_WEBHOOK_URL` environment variable for simpler webhook-based notifications (no OAuth required).
+</Info>
+
+## PagerDuty
+
+<Steps>
+  <Step title="Connect PagerDuty">
+    Go to **Settings > Integrations > PagerDuty** and add your routing key. Or set the `PAGERDUTY_ROUTING_KEY` environment variable.
+  </Step>
+</Steps>
+
+**What gets sent:**
+- Escalated incidents create PagerDuty incidents with severity and summary
+- Includes a direct link to the Wraith dashboard for investigation
+
+<Tip>
+  PagerDuty is bidirectional — Wraith can both **receive** PagerDuty alerts (as an alert source) and **send** notifications to PagerDuty when incidents are escalated.
+</Tip>
+
+## Notification timing
+
+Notifications are sent at these points in the incident lifecycle:
+
+| Event | Slack | PagerDuty |
+|-------|-------|-----------|
+| Incident escalated | Yes | Yes |
+| AutoFix PR created | Yes | No |
+| Runbook executed | Yes | No |
+| Incident resolved | Optional | Optional |

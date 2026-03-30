@@ -29,14 +29,27 @@
             "icon": "wrench",
             "pages": [
               "sdk-reference",
-              "alert-integrations"
+              "alert-integrations",
+              "notifications"
             ]
           },
           {
-            "group": "Using Wraith",
-            "icon": "layout-dashboard",
+            "group": "Features",
+            "icon": "sparkles",
+            "pages": [
+              "incidents",
+              "services",
+              "autofix",
+              "runbooks",
+              "intelligence"
+            ]
+          },
+          {
+            "group": "Reference",
+            "icon": "book-open",
             "pages": [
               "dashboard",
+              "settings",
               "api-reference"
             ]
           }

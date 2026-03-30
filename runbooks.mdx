@@ -1,0 +1,68 @@
+---
+title: "Runbooks"
+description: "Create automated mitigation playbooks that trigger when specific incidents occur."
+---
+
+Runbooks are structured response procedures that Wraith can suggest or auto-execute when an incident matches certain criteria.
+
+## Creating a runbook
+
+<Steps>
+  <Step title="Define the runbook">
+    Give it a name, select a **mitigation type**, and write the steps.
+
+    **Mitigation types:**
+    | Type | What it does |
+    |------|-------------|
+    | Restart | Restart the affected service |
+    | Failover | Switch to a backup instance |
+    | Rate Limit | Throttle traffic to protect the service |
+    | Config Patch | Apply a configuration change |
+    | Degraded Mode | Enable graceful degradation |
+    | Notify Only | Alert the team without automated action |
+  </Step>
+  <Step title="Set match criteria">
+    Define when this runbook should trigger:
+    - **Services** — which services this applies to
+    - **Error patterns** — specific failure fingerprints
+    - **Alert providers** — Datadog, CloudWatch, Sentry, etc.
+    - **Severity levels** — which severities trigger it
+    - **Environments** — production only, or staging too
+  </Step>
+  <Step title="Configure execution">
+    - **Auto-execute threshold** — confidence level needed to run without approval
+    - **Approval policy** — auto or manual approval required
+    - **Cooldown** — minimum seconds between executions
+    - **Side effect level** — classify the impact (low, medium, high)
+  </Step>
+  <Step title="Add steps">
+    Each step has a type and intent:
+
+    | Step type | Use case |
+    |-----------|----------|
+    | `API_CALL` | Call an API endpoint |
+    | `MCP_TOOL` | Run an MCP tool |
+    | `NOTIFICATION` | Send a Slack or PagerDuty message |
+    | `MANUAL_APPROVAL` | Pause and wait for human approval |
+  </Step>
+</Steps>
+
+## Executing a runbook
+
+When an incident matches a runbook's criteria:
+
+1. Wraith suggests the runbook on the incident detail page
+2. Click **Execute** to start (or it auto-executes if confidence exceeds the threshold)
+3. Each step runs in order — manual approval steps pause until approved
+4. Results are recorded for each step
+
+## Execution history
+
+Every execution is logged with:
+- Status: `SUCCEEDED`, `PARTIALLY_SUCCEEDED`, `FAILED`, `RUNNING`, `QUEUED`, `AWAITING_APPROVAL`, `TIMED_OUT`, `CANCELLED`
+- Per-step output and timing
+- Who approved (for manual steps)
+
+<Info>
+  The **success rate** shown on each runbook is calculated from historical executions — use it to identify runbooks that need improvement.
+</Info>

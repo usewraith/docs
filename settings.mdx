@@ -1,0 +1,86 @@
+---
+title: "Settings"
+description: "Configure your organization, team, integrations, billing, and API keys."
+---
+
+Manage your Wraith organization from the Settings page.
+
+## General
+
+- **Team name** — your organization's display name
+- **Team avatar** — upload a logo or icon
+- **Team URL** — your unique slug
+
+## Members
+
+Manage your team:
+
+| Action | Description |
+|--------|-------------|
+| **Invite** | Send an invite by email |
+| **Roles** | Assign admin or member roles |
+| **Transfer ownership** | Move org ownership to another admin |
+| **Remove** | Remove a team member |
+
+## Integrations
+
+Connect your monitoring tools and notification channels from a single page.
+
+<CardGroup cols={3}>
+  <Card title="Datadog" icon="chart-bar">
+    Alert ingestion via webhook
+  </Card>
+  <Card title="CloudWatch" icon="cloud">
+    Alert ingestion via SNS
+  </Card>
+  <Card title="Sentry" icon="bug">
+    Alert ingestion via webhook
+  </Card>
+  <Card title="PagerDuty" icon="bell">
+    Alerts + notifications
+  </Card>
+  <Card title="Grafana" icon="chart-line">
+    Alert ingestion via webhook
+  </Card>
+  <Card title="Opsgenie" icon="shield">
+    Alert ingestion via webhook
+  </Card>
+  <Card title="Bugsnag" icon="bug">
+    Alert ingestion via webhook
+  </Card>
+  <Card title="Slack" icon="message-square">
+    Incident notifications
+  </Card>
+  <Card title="GitHub" icon="git-branch">
+    AutoFix PRs and commit analysis
+  </Card>
+</CardGroup>
+
+Each integration shows its connection status, webhook URL, and a **Test** button to verify the connection.
+
+See [Alert Integrations](/alert-integrations) for detailed per-provider setup.
+
+## API Keys
+
+Create and manage API keys for SDK trace uploads, programmatic API access, and MCP editor connections.
+
+- Keys are shown only once at creation — store them securely
+- Each key shows its name, creation date, and last used timestamp
+- Revoke keys that are no longer needed
+
+## Billing
+
+- **Current plan** — Free or Pro
+- **Credit balance** — remaining credits this billing period
+- **Usage** — traces ingested, verifications run
+- **Upgrade** — move from Free to Pro for full verification access
+- **Invoices** — download PDF invoices
+
+## AI Summary preferences
+
+Customize how Wraith generates incident summaries:
+
+| Setting | Options |
+|---------|---------|
+| **Style** | Technical (full detail), Executive (business impact), Concise (essentials only) |
+| **Detail level** | High (5-6 bullets), Medium (3-4 bullets), Low (2-3 bullets) |

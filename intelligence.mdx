@@ -1,0 +1,60 @@
+---
+title: "Intelligence"
+description: "Production analytics — fix success rates, calibration accuracy, prevention coverage, and recurring failures."
+---
+
+The Intelligence page gives you a high-level view of how Wraith is performing across your services. Data refreshes every 30 seconds.
+
+## Key metrics
+
+<CardGroup cols={2}>
+  <Card title="Fix Success Rate" icon="circle-check">
+    Percentage of fixes that caused no regressions after merge. Tracks successful fixes vs total attempts.
+  </Card>
+  <Card title="Calibration Accuracy" icon="target">
+    How accurate Wraith's confidence predictions are. Shows calibration error and total predictions made.
+  </Card>
+  <Card title="Prevention Coverage" icon="shield">
+    Percentage of incidents that have regression test coverage. Shows test cases generated vs total incidents.
+  </Card>
+  <Card title="Regressions Caught" icon="bug">
+    Number of post-merge regressions detected. Green when zero, red when regressions are found.
+  </Card>
+</CardGroup>
+
+## Recurring failures
+
+Shows services and error types that fail repeatedly:
+
+| Column | Description |
+|--------|-------------|
+| **Service** | Which service is failing |
+| **Error type** | The type of failure |
+| **Total attempts** | How many times it's occurred |
+| **Success rate** | Percentage of successful fixes |
+| **Best fix strategy** | The approach that works most often |
+
+<Tip>
+  Recurring failures with low success rates are your highest-leverage targets. Focus on improving runbooks or root-cause fixes for these.
+</Tip>
+
+## Highest risk services
+
+Services ranked by incident frequency and test coverage gaps:
+
+| Column | Description |
+|--------|-------------|
+| **Service** | Service name |
+| **Incidents** | Total incident count |
+| **Test cases** | Number of generated test cases |
+| **Coverage gap** | Percentage of incidents without test coverage |
+
+## Slowest to fix
+
+The hardest incidents to resolve, ranked by iterations needed:
+
+| Column | Description |
+|--------|-------------|
+| **Service** | Service name |
+| **Error type** | Type of failure |
+| **Avg iterations** | Average fix iterations before resolution |

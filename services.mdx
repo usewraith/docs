@@ -1,0 +1,67 @@
+---
+title: "Services & Dependencies"
+description: "Visualize your service topology, track health, and understand how failures cascade."
+---
+
+Wraith automatically discovers your services from traces, logs, and alerts — then maps how they connect.
+
+## Service graph
+
+An interactive force-directed graph showing every service and how they depend on each other.
+
+**Each node shows:**
+- Service name and health status (up, degraded, down, unknown)
+- Environment and team assignment
+- Error rate and average latency
+- Recent trace and error counts
+- Confidence score (how certain Wraith is about this service)
+
+**Each edge shows:**
+- Dependency type (service, database, cache, queue, external)
+- Confidence score
+- Cross-verification status (found in traces, logs, or both)
+
+<Info>
+  Services found in **both** traces and logs have the highest confidence. Services found in only one source may need additional instrumentation.
+</Info>
+
+## How services are discovered
+
+Wraith discovers services from multiple sources:
+
+| Source | What it finds |
+|--------|--------------|
+| **Traces** | Services instrumented with the SDK |
+| **Logs** | Services referenced in CloudWatch or Datadog logs |
+| **Alerts** | Services named in monitoring tool alerts |
+| **Log groups** | AWS log group naming conventions (`/aws/lambda/service-name`, `/ecs/service-name`) |
+
+## Service health
+
+Health is updated automatically based on:
+
+- **Error logs** — error-level logs mark a service as degraded or down
+- **Trace failures** — failed verifications affect service health
+- **Alert frequency** — high alert frequency lowers health score
+- **No recent data** — services without recent traces or logs are marked unknown
+
+## Dependency types
+
+| Type | Icon color | Meaning |
+|------|-----------|---------|
+| **Service** | Blue | Another microservice |
+| **Database** | Green | PostgreSQL, MySQL, etc. |
+| **Cache** | Yellow | Redis, Memcached |
+| **Queue** | Orange | SQS, RabbitMQ, Kafka |
+| **External** | Gray | Third-party APIs |
+
+## Using the graph
+
+- **Zoom and pan** to explore your topology
+- **Click a service** to see its details, endpoints, and recent incidents
+- **Filter by name** to find a specific service
+- **Color coding** shows health at a glance — green is healthy, red is down
+
+<Tip>
+  Use the service graph during an incident to understand blast radius. If a core service is down, the graph shows which downstream services are affected.
+</Tip>
