@@ -1,100 +1,127 @@
 ---
-title: Introduction
-description: Automated incident response for engineering teams
+title: "Introduction"
+description: "Automated incident response for engineering teams. Receive alerts, investigate with AI, get root cause analysis and code fixes."
 ---
 
-# Introduction
-
-Wraith On-Call Engineer receives alerts from your monitoring tools, investigates incidents with AI, and delivers root cause analysis — with optional automatic code fixes.
+Wraith On-Call Engineer receives alerts from your monitoring tools, investigates incidents automatically, and delivers root cause analysis — with optional code fixes via GitHub PRs.
 
 <CardGroup cols={2}>
-  <Card title="Add to Cursor" icon="cursor" href="#cursor-setup">
-    Install in one click. Copies the MCP config to your Cursor settings.
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get your first incident flowing in 5 minutes
   </Card>
-  <Card title="Add to Claude Code" icon="terminal" href="#claude-code-setup">
-    One terminal command. Installs the SDK and starts interactive setup.
+  <Card title="SDK Reference" icon="book-open" href="/sdk-reference">
+    Full plugin options, sampling, and wrappers
+  </Card>
+  <Card title="Alert Integrations" icon="bell" href="/alert-integrations">
+    Connect Datadog, CloudWatch, Sentry, and more
+  </Card>
+  <Card title="Dashboard" icon="layout-dashboard" href="/dashboard">
+    Navigate incidents, services, and runbooks
   </Card>
 </CardGroup>
 
-## How It Works
+## Set up your editor
 
-<Steps>
-  <Step title="Alert fires">
-    Your monitoring tool (Datadog, CloudWatch, Sentry, etc.) sends a webhook to Wraith.
-  </Step>
-  <Step title="AI triage">
-    Wraith filters noise, detects duplicates, and analyzes service dependencies.
-  </Step>
-  <Step title="Automated investigation">
-    Selects relevant traces, runs verification, and identifies the root cause.
-  </Step>
-  <Step title="You get notified">
-    Slack, PagerDuty, or the dashboard — with evidence and root cause.
-  </Step>
-  <Step title="Optional AutoFix">
-    Generates a verified code patch and opens a GitHub PR.
-  </Step>
-</Steps>
-
-## Cursor Setup
-
-Using Cursor? Install in one click:
+<Tip>
+  Using an AI coding tool? Get interactive, guided setup in seconds.
+</Tip>
 
 <Tabs>
-  <Tab title="MCP Config">
-    Add this to your Cursor MCP settings (`Settings > MCP Servers > Add`):
+  <Tab title="Claude Code">
+    Run in your project directory:
+
+    ```bash
+    npm install @runtime-digital-twin/sdk && claude
+    ```
+
+    Then paste this prompt:
+
+    ```text
+    Set up Wraith On-Call Engineer for this project. Read package.json, find
+    my server entry point, and walk me through adding fastifyTracing,
+    createWrappedDbClient, and wrapFetch from @runtime-digital-twin/sdk.
+    Ask me one question at a time.
+    ```
+
+    Connect Wraith's MCP server for incident investigation:
+
+    ```bash
+    claude mcp add wraith --transport http https://<your-wraith-url>/api/mcp \
+      -- --header "Authorization: Bearer <your-api-key>"
+    ```
+  </Tab>
+  <Tab title="Cursor">
+    Install the SDK:
+
+    ```bash
+    npm install @runtime-digital-twin/sdk
+    ```
+
+    Open Cursor Chat (`Cmd+L`) and paste:
+
+    ```text
+    Set up Wraith On-Call Engineer for this project. Read package.json, find
+    my server entry point, and walk me through adding fastifyTracing,
+    createWrappedDbClient, and wrapFetch from @runtime-digital-twin/sdk.
+    Ask me one question at a time.
+    ```
+
+    Connect MCP in **Settings > MCP Servers > Add**:
 
     ```json
     {
       "wraith": {
         "url": "https://<your-wraith-url>/api/mcp",
         "type": "http",
-        "headers": {
-          "Authorization": "Bearer <your-api-key>"
-        }
+        "headers": { "Authorization": "Bearer <your-api-key>" }
       }
     }
     ```
   </Tab>
-  <Tab title="Available Tools">
-    Once connected, you get these MCP tools in Cursor Chat:
-
-    | Tool | Description |
-    |------|-------------|
-    | `search_incidents` | Find incidents by service or status |
-    | `get_investigation_detail` | Full evidence and context |
-    | `compare_incidents` | Side-by-side diff of two incidents |
-    | `get_similar_fixes` | Past fixes for this failure pattern |
-    | `get_verification_report` | Root cause and confidence score |
-  </Tab>
 </Tabs>
 
-## Claude Code Setup
+## How it works
 
-Run this in your project directory:
+<Steps>
+  <Step title="Alert fires">
+    Your monitoring tool (Datadog, CloudWatch, Sentry, PagerDuty, Grafana, Opsgenie, or Bugsnag) sends a webhook to Wraith.
+  </Step>
+  <Step title="AI triage">
+    Wraith filters noise, detects duplicates, and analyzes service dependencies to determine if the alert is real.
+  </Step>
+  <Step title="Automated investigation">
+    Selects the most relevant traces, runs AI-powered verification, and identifies the root cause.
+  </Step>
+  <Step title="You get notified">
+    Via Slack, PagerDuty, or the dashboard — with full evidence and root cause analysis.
+  </Step>
+  <Step title="Optional AutoFix">
+    Generates a verified code patch and opens a GitHub PR for review.
+  </Step>
+</Steps>
 
-```bash
-claude mcp add wraith --transport http https://<your-wraith-url>/api/mcp -- --header "Authorization: Bearer <your-api-key>"
-```
+## MCP tools
 
-Then start an interactive setup session:
+Once you connect the MCP server, these tools are available in your editor:
 
-```bash
-npm install @runtime-digital-twin/sdk && claude
-```
+| Tool | Description |
+|------|-------------|
+| `search_incidents` | Find incidents by service, status, or time range |
+| `get_investigation_detail` | Full evidence, context, and fix jobs for an incident |
+| `compare_incidents` | Side-by-side comparison of two incidents |
+| `get_similar_fixes` | Past fixes that match this failure pattern |
+| `get_verification_report` | Root cause, confidence score, and evidence |
 
-Claude Code will read your project, ask you questions, and instrument your app step-by-step.
-
-## Supported Integrations
+## Supported integrations
 
 <CardGroup cols={3}>
   <Card title="Alert Sources" icon="bell">
     Datadog, CloudWatch, Sentry, PagerDuty, Grafana, Opsgenie, Bugsnag
   </Card>
-  <Card title="Notifications" icon="message">
+  <Card title="Notifications" icon="message-square">
     Slack, PagerDuty
   </Card>
-  <Card title="Code" icon="code">
+  <Card title="Code & Editors" icon="code">
     GitHub, Cursor, Claude Code
   </Card>
 </CardGroup>

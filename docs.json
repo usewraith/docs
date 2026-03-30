@@ -8,6 +8,9 @@
     "dark": "#5b21b6"
   },
   "favicon": "/favicon.svg",
+  "icons": {
+    "library": "lucide"
+  },
   "navigation": {
     "tabs": [
       {
@@ -15,6 +18,7 @@
         "groups": [
           {
             "group": "Get Started",
+            "icon": "rocket",
             "pages": [
               "introduction",
               "quickstart"
@@ -22,6 +26,7 @@
           },
           {
             "group": "Setup",
+            "icon": "wrench",
             "pages": [
               "sdk-reference",
               "alert-integrations"
@@ -29,6 +34,7 @@
           },
           {
             "group": "Using Wraith",
+            "icon": "layout-dashboard",
             "pages": [
               "dashboard",
               "api-reference"

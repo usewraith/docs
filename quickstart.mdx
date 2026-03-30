@@ -1,19 +1,37 @@
 ---
-title: Quickstart
-description: Get your first incident flowing in 5 minutes
+title: "Quickstart"
+description: "Get Wraith connected to your app and monitoring tool in under 5 minutes."
 ---
 
-# Quickstart
+After you complete this guide, you'll have traces flowing from your app and alerts creating incidents in Wraith.
 
-Get Wraith connected to your app and monitoring tool in under 5 minutes.
+## Before you begin
 
-## 1. Install the SDK
+You need a Wraith account and access to the dashboard. Go to **Settings > API Keys** and create an API key — you'll need it for trace uploads.
 
-```bash
+<Info>
+  Your API key starts being shown only once. Store it securely.
+</Info>
+
+## Install the SDK
+
+<CodeGroup>
+
+```bash npm
 npm install @runtime-digital-twin/sdk
 ```
 
-## 2. Add tracing to your server
+```bash pnpm
+pnpm add @runtime-digital-twin/sdk
+```
+
+```bash yarn
+yarn add @runtime-digital-twin/sdk
+```
+
+</CodeGroup>
+
+## Add tracing to your server
 
 Add the Fastify plugin **before** your route definitions:
 
@@ -34,11 +52,11 @@ await fastify.register(fastifyTracing, {
 });
 ```
 
-<Info>
+<Warning>
   The `serviceName` must match what your monitoring tool uses. This is how Wraith correlates alerts to traces.
-</Info>
+</Warning>
 
-## 3. Wrap your database
+## Wrap your database
 
 ```typescript
 import { createWrappedDbClient } from '@runtime-digital-twin/sdk';
@@ -47,63 +65,92 @@ import { Pool } from 'pg';
 const db = await createWrappedDbClient({
   realClient: new Pool({ connectionString: process.env.DATABASE_URL }),
 });
+
+// Use db.query() as normal
 ```
 
-## 4. Wrap outbound HTTP (optional)
+## Wrap outbound HTTP calls
 
-If your service calls other APIs:
+If your service calls external APIs, wrap `fetch` for full trace coverage:
 
 ```typescript
 import { wrapFetch } from '@runtime-digital-twin/sdk';
 
 const wrappedFetch = wrapFetch(fetch);
+// Use wrappedFetch instead of fetch
 ```
 
-## 5. Set environment variables
+<Tip>
+  Without wrapping outbound calls, Wraith can't see the full picture of what happened during a request.
+</Tip>
+
+## Set environment variables
+
+Add to your `.env` or deployment config:
 
 ```bash
 WRAITH_API_URL=https://<your-wraith-url>
 WRAITH_API_KEY=<your-api-key>
 ```
 
-<Tip>
-  Get your API key from **Settings > API Keys** in the Wraith dashboard.
-</Tip>
+## Connect your monitoring tool
 
-## 6. Connect your monitoring tool
-
-Get your webhook URL from **Settings > Integrations** in the Wraith dashboard, then configure your monitoring tool:
+Get the webhook URL from **Settings > Integrations** in your Wraith dashboard.
 
 <Tabs>
   <Tab title="Datadog">
-    1. Go to **Integrations > Webhooks > New Webhook**
-    2. **URL**: paste the webhook URL from Wraith
-    3. **Headers**: `x-wraith-webhook-secret: <your-secret>`
-    4. Add `@webhook-<name>` to your monitor notifications
+    <Steps>
+      <Step title="Get webhook URL">
+        In Wraith, go to **Settings > Integrations > Datadog** and copy the webhook URL and secret.
+      </Step>
+      <Step title="Create webhook in Datadog">
+        Go to **Integrations > Webhooks > New Webhook**. Paste the URL and add the header `x-wraith-webhook-secret: <your-secret>`.
+      </Step>
+      <Step title="Add to monitors">
+        Add `@webhook-<name>` to your Datadog monitor notification fields.
+      </Step>
+    </Steps>
   </Tab>
   <Tab title="CloudWatch">
-    ```bash
-    aws sns create-topic --name wraith-alerts
-
-    aws sns subscribe \
-      --topic-arn arn:aws:sns:<region>:<account>:wraith-alerts \
-      --protocol https \
-      --notification-endpoint <webhook-url>
-    ```
-    Attach your CloudWatch alarms to the topic.
+    <Steps>
+      <Step title="Create SNS topic">
+        ```bash
+        aws sns create-topic --name wraith-alerts
+        ```
+      </Step>
+      <Step title="Subscribe Wraith endpoint">
+        ```bash
+        aws sns subscribe \
+          --topic-arn arn:aws:sns:<region>:<account>:wraith-alerts \
+          --protocol https \
+          --notification-endpoint <webhook-url-from-wraith>
+        ```
+      </Step>
+      <Step title="Attach alarms">
+        Point your CloudWatch alarms to the SNS topic.
+      </Step>
+    </Steps>
   </Tab>
   <Tab title="Sentry">
-    1. Go to **Settings > Integrations > Webhooks**
-    2. Add the webhook URL from Wraith
-    3. Configure alert rules to send to the webhook
+    <Steps>
+      <Step title="Get webhook URL">
+        In Wraith, go to **Settings > Integrations > Sentry** and copy the URL and secret.
+      </Step>
+      <Step title="Configure Sentry">
+        Go to **Settings > Integrations > Webhooks** and add the URL. Configure alert rules to send to the webhook.
+      </Step>
+    </Steps>
   </Tab>
   <Tab title="Others">
-    PagerDuty, Grafana, Opsgenie, and Bugsnag all follow the same pattern.
-    See [Alert Integrations](/alert-integrations) for detailed setup.
+    PagerDuty, Grafana, Opsgenie, and Bugsnag all follow the same pattern — get the webhook URL from **Settings > Integrations** and configure your tool to send alerts to it.
+
+    See [Alert Integrations](/alert-integrations) for detailed per-provider instructions.
   </Tab>
 </Tabs>
 
-## 7. Test it
+## Test it
+
+Send a test alert to verify everything is connected:
 
 ```bash
 curl -X POST https://<your-wraith-url>/api/alerts/datadog/<your-org-id> \
@@ -112,18 +159,27 @@ curl -X POST https://<your-wraith-url>/api/alerts/datadog/<your-org-id> \
   -d '{"event":{"title":"Test Alert","text":"Testing Wraith","alert_type":"error","service":"my-api-service","environment":"production"}}'
 ```
 
-Open **Incidents** in your Wraith dashboard — you should see the test incident.
+Open **Incidents** in your Wraith dashboard — you should see the test incident within seconds.
 
-## Next Steps
+<AccordionGroup>
+  <Accordion title="Incident stuck at RECEIVED?">
+    This means the pipeline didn't start. Check that your alert's `service` name matches the `serviceName` in your SDK config. If the pipeline still doesn't run, contact your Wraith administrator to verify the workflow engine is configured.
+  </Accordion>
+  <Accordion title="Webhook returning errors?">
+    Copy the URL directly from **Settings > Integrations** — don't modify the org ID in the path. Verify the webhook secret matches exactly.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
 
 <CardGroup cols={2}>
-  <Card title="SDK Reference" icon="book" href="/sdk-integration">
-    Full plugin options, sampling, and wrappers
+  <Card title="SDK Reference" icon="book-open" href="/sdk-reference">
+    Sampling, all plugin options, advanced wrappers
   </Card>
   <Card title="Alert Integrations" icon="bell" href="/alert-integrations">
     Detailed setup for all 7 monitoring tools
   </Card>
-  <Card title="Dashboard" icon="chart-line" href="/dashboard">
+  <Card title="Dashboard" icon="layout-dashboard" href="/dashboard">
     Navigate incidents, services, and runbooks
   </Card>
   <Card title="API Reference" icon="code" href="/api-reference">
