@@ -1,0 +1,265 @@
+---
+title: SDK Reference
+description: Instrument your backend with the Wraith SDK
+---
+
+The Wraith SDK (`@runtime-digital-twin/sdk`) instruments your backend to capture traces — complete records of HTTP requests, database queries, outbound calls, and errors. These traces power the entire incident response pipeline.
+
+## Installation
+
+```bash
+npm install @runtime-digital-twin/sdk
+```
+
+
+## Core Concepts
+
+### Traces
+
+A **trace** is a self-contained recording of a single request through your service. It captures:
+- The incoming HTTP request and response (method, path, headers, body, status)
+- All database queries executed during the request (SQL, parameters, results)
+- All outbound HTTP calls made during the request (URL, method, response)
+- Errors and stack traces
+- Timing information and correlation IDs
+
+Traces are stored locally and optionally uploaded to your Wraith instance automatically.
+
+
+## Fastify Tracing Plugin
+
+The primary integration point. Register it before your routes.
+
+### Basic Setup
+
+```typescript
+import Fastify from 'fastify';
+import { fastifyTracing } from '@runtime-digital-twin/sdk';
+
+const fastify = Fastify();
+
+await fastify.register(fastifyTracing, {
+  serviceName: 'my-service',
+  serviceVersion: '1.0.0',
+  environment: 'production',
+  traceDir: './traces',
+});
+```
+
+### Full Options Reference
+
+```typescript
+await fastify.register(fastifyTracing, {
+  // --- Identity ---
+  serviceName: 'my-service',         // Required. Must match your monitoring tool's service name.
+  serviceVersion: '1.0.0',           // Optional. Your service version.
+  environment: 'production',         // Optional. Environment name.
+
+  // --- Storage ---
+  traceDir: './traces',              // Where trace bundles are written locally. Default: './traces'
+
+  // --- Capture ---
+  headerAllowlist: ['x-request-id'], // Optional. Additional headers to capture.
+  maxBodySize: 10 * 1024 * 1024,     // Max request/response body size. Default: 10 MB.
+  enabled: true,                     // Enable/disable tracing entirely. Default: true.
+
+  // --- Sampling ---
+  traceSampleRate: 1,                // 0-1. Fraction of requests to trace. Default: 1 (all).
+  alwaysTraceErrors: true,           // Always capture traces for errored requests, even if not
+                                     // sampled. Default: true. Ensures failures are never missed.
+
+  // --- Upload ---
+  uploadUrl: process.env.WRAITH_API_URL + '/api/traces/ingest',
+  apiKey: process.env.WRAITH_API_KEY,
+  uploadOnComplete: true,            // Auto-upload after each request completes. Default: true.
+});
+```
+
+### Sampling Strategy
+
+For high-traffic services, use `traceSampleRate` to control volume:
+
+| Traffic Level | Recommended `traceSampleRate` | Notes |
+|---------------|-------------------------------|-------|
+| < 100 req/min | `1` (100%) | Trace everything |
+| 100-1000 req/min | `0.1` - `0.5` (10-50%) | Good balance of coverage and cost |
+| > 1000 req/min | `0.01` - `0.1` (1-10%) | Keep volume manageable |
+
+`alwaysTraceErrors: true` (the default) ensures that requests ending in errors are always traced and uploaded, regardless of sample rate. You never want to miss a failing request.
+
+### Rate Limits
+
+If the ingest endpoint returns **429 Too Many Requests**, the SDK retries with exponential backoff and respects the `Retry-After` header. Uploads happen asynchronously and do not slow down your application's response time.
+
+
+## Database Wrapper
+
+Wraps your PostgreSQL client to capture all queries in traces. Drop-in replacement.
+
+```typescript
+import { createWrappedDbClient } from '@runtime-digital-twin/sdk';
+import { Pool } from 'pg';
+
+const db = await createWrappedDbClient({
+  realClient: new Pool({
+    connectionString: process.env.DATABASE_URL,
+  }),
+});
+
+// Use it exactly like your normal client
+const result = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+```
+
+### What Gets Captured
+
+For every query: SQL statement, parameters, result set, execution time, and errors.
+
+
+## HTTP Client Wrapper
+
+Captures outbound HTTP calls for complete trace coverage.
+
+```typescript
+import { wrapFetch } from '@runtime-digital-twin/sdk';
+
+const wrappedFetch = wrapFetch(fetch);
+
+const response = await wrappedFetch('https://api.stripe.com/v1/charges', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${process.env.STRIPE_KEY}` },
+  body: 'amount=999&currency=usd',
+});
+```
+
+### Why This Matters
+
+Without wrapping outbound HTTP calls, Wraith cannot see the full picture of what happened during a request. Wrap `fetch` for all services that make outbound calls, especially to payment providers, third-party APIs, or other internal services.
+
+
+## Trace Context and Correlation
+
+The SDK automatically generates correlation IDs for cross-service tracing.
+
+```typescript
+import { getTraceContext, setTraceContext } from '@runtime-digital-twin/sdk';
+
+// Read current context
+const context = getTraceContext();
+
+// Set custom context
+setTraceContext({ traceId: 'custom-id', spanId: 'custom-span' });
+```
+
+When your service calls another instrumented service, the SDK propagates the correlation ID via HTTP headers, enabling Wraith to stitch together multi-service traces.
+
+
+## Trace Management API
+
+For advanced use cases:
+
+```typescript
+import {
+  createTrace,
+  loadTraceMeta,
+  validateTraceStructure,
+  uploadTrace,
+} from '@runtime-digital-twin/sdk';
+```
+
+
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `WRAITH_API_URL` | For upload | — | Your Wraith instance URL |
+| `WRAITH_API_KEY` | For upload | — | API key from Settings > API Keys |
+| `RDT_MODE` | No | `record` | Leave as default |
+| `RDT_TRACE_DIR` | No | `./traces` | Trace storage directory |
+
+
+## Service Name Consistency
+
+The `serviceName` you set in the SDK **must match across all systems**:
+
+| System | Where to set |
+|--------|-------------|
+| **SDK** | `serviceName` option in `fastifyTracing` |
+| **Datadog** | Service tag on monitors/metrics |
+| **CloudWatch** | Log group or alarm dimension |
+| **Sentry** | `serverName` in Sentry config |
+| **Wraith Service Registry** | Service name in the registry |
+
+If names don't match, Wraith cannot correlate alerts to traces.
+
+
+## Complete Example
+
+```typescript
+import Fastify from 'fastify';
+import { fastifyTracing, createWrappedDbClient, wrapFetch } from '@runtime-digital-twin/sdk';
+import { Pool } from 'pg';
+
+async function start() {
+  const fastify = Fastify({ logger: true });
+
+  await fastify.register(fastifyTracing, {
+    serviceName: 'user-api',
+    serviceVersion: '1.0.0',
+    environment: process.env.NODE_ENV || 'production',
+    traceDir: './traces',
+    uploadUrl: `${process.env.WRAITH_API_URL}/api/traces/ingest`,
+    apiKey: process.env.WRAITH_API_KEY,
+    uploadOnComplete: true,
+  });
+
+  const db = await createWrappedDbClient({
+    realClient: new Pool({ connectionString: process.env.DATABASE_URL }),
+  });
+
+  const fetchApi = wrapFetch(fetch);
+
+  fastify.get('/api/users/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const result = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+    if (result.rows.length === 0) return reply.code(404).send({ error: 'Not found' });
+    return result.rows[0];
+  });
+
+  await fastify.listen({ port: 3000, host: '0.0.0.0' });
+}
+
+start().catch(console.error);
+```
+
+
+## Troubleshooting
+
+### Traces Not Being Created
+
+1. Check `traceDir` is writable.
+2. Check `enabled` is `true` (default).
+3. Check application logs for SDK errors.
+
+### Traces Not Uploading
+
+1. Check `WRAITH_API_URL` and `WRAITH_API_KEY` are set.
+2. Check network: your deployment must reach the Wraith URL.
+3. Check for 429 errors — reduce `traceSampleRate` if rate limited.
+
+### Database Queries Not Captured
+
+1. Call `createWrappedDbClient` before using the client in any route.
+2. Verify `DATABASE_URL` is set and the connection is valid.
+
+### Large Traces / High Memory Usage
+
+1. Reduce `maxBodySize` if payloads are large.
+2. Enable sampling with `traceSampleRate` below 1.
+
+
+## Next Steps
+
+- [Connect alert sources](/alert-integrations)
+- [Use the dashboard](/dashboard)
+- [API reference](/api-reference)
+

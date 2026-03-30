@@ -1,0 +1,100 @@
+---
+title: Introduction
+description: Automated incident response for engineering teams
+---
+
+# Introduction
+
+Wraith On-Call Engineer receives alerts from your monitoring tools, investigates incidents with AI, and delivers root cause analysis — with optional automatic code fixes.
+
+<CardGroup cols={2}>
+  <Card title="Add to Cursor" icon="cursor" href="#cursor-setup">
+    Install in one click. Copies the MCP config to your Cursor settings.
+  </Card>
+  <Card title="Add to Claude Code" icon="terminal" href="#claude-code-setup">
+    One terminal command. Installs the SDK and starts interactive setup.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+<Steps>
+  <Step title="Alert fires">
+    Your monitoring tool (Datadog, CloudWatch, Sentry, etc.) sends a webhook to Wraith.
+  </Step>
+  <Step title="AI triage">
+    Wraith filters noise, detects duplicates, and analyzes service dependencies.
+  </Step>
+  <Step title="Automated investigation">
+    Selects relevant traces, runs verification, and identifies the root cause.
+  </Step>
+  <Step title="You get notified">
+    Slack, PagerDuty, or the dashboard — with evidence and root cause.
+  </Step>
+  <Step title="Optional AutoFix">
+    Generates a verified code patch and opens a GitHub PR.
+  </Step>
+</Steps>
+
+## Cursor Setup
+
+Using Cursor? Install in one click:
+
+<Tabs>
+  <Tab title="MCP Config">
+    Add this to your Cursor MCP settings (`Settings > MCP Servers > Add`):
+
+    ```json
+    {
+      "wraith": {
+        "url": "https://<your-wraith-url>/api/mcp",
+        "type": "http",
+        "headers": {
+          "Authorization": "Bearer <your-api-key>"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Available Tools">
+    Once connected, you get these MCP tools in Cursor Chat:
+
+    | Tool | Description |
+    |------|-------------|
+    | `search_incidents` | Find incidents by service or status |
+    | `get_investigation_detail` | Full evidence and context |
+    | `compare_incidents` | Side-by-side diff of two incidents |
+    | `get_similar_fixes` | Past fixes for this failure pattern |
+    | `get_verification_report` | Root cause and confidence score |
+  </Tab>
+</Tabs>
+
+## Claude Code Setup
+
+Run this in your project directory:
+
+```bash
+claude mcp add wraith --transport http https://<your-wraith-url>/api/mcp -- --header "Authorization: Bearer <your-api-key>"
+```
+
+Then start an interactive setup session:
+
+```bash
+npm install @runtime-digital-twin/sdk && claude
+```
+
+Claude Code will read your project, ask you questions, and instrument your app step-by-step.
+
+## Supported Integrations
+
+<CardGroup cols={3}>
+  <Card title="Alert Sources" icon="bell">
+    Datadog, CloudWatch, Sentry, PagerDuty, Grafana, Opsgenie, Bugsnag
+  </Card>
+  <Card title="Notifications" icon="message">
+    Slack, PagerDuty
+  </Card>
+  <Card title="Code" icon="code">
+    GitHub, Cursor, Claude Code
+  </Card>
+</CardGroup>

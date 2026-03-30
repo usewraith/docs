@@ -1,0 +1,225 @@
+---
+title: Alert Integrations
+description: Connect your monitoring tools to Wraith via webhooks
+---
+
+Wraith receives alerts from your monitoring tools via webhooks. Each alert source has a dedicated ingestion endpoint that normalizes the payload and feeds it into the incident pipeline.
+
+## How Alert Ingestion Works
+
+1. Your monitoring tool fires an alert and sends a webhook to Wraith.
+2. Wraith validates the webhook (secret, signature, or SNS verification).
+3. The alert is normalized into an internal format.
+4. Layer 0 triage begins — deduplication, noise filtering, root cause analysis.
+5. If the alert represents a real incident, the full pipeline runs.
+
+### Webhook URLs
+
+All webhook URLs follow the pattern:
+
+```
+https://<your-wraith-url>/api/alerts/<provider>/<your-org-id>
+```
+
+Get the exact URL from **Settings > Integrations** in the dashboard. Do not modify the organization ID.
+
+### Authentication
+
+| Provider | Method |
+|----------|--------|
+| Datadog | `x-wraith-webhook-secret` header |
+| CloudWatch | SNS subscription confirmation + message signature |
+| Sentry | `x-wraith-webhook-secret` header |
+| PagerDuty | `x-wraith-webhook-secret` header |
+| Grafana | `x-wraith-webhook-secret` header |
+| Opsgenie | `x-wraith-webhook-secret` header |
+| Bugsnag | `x-wraith-webhook-secret` header |
+
+
+## Datadog
+
+**Endpoint**: `POST /api/alerts/datadog/<orgId>`
+
+### Setup
+
+1. In **Wraith**: go to **Settings > Integrations > Datadog**. Copy the **Webhook URL** and **Webhook Secret**.
+2. In **Datadog**: go to **Integrations > Webhooks > New Webhook**.
+   - **Name**: `Wraith On-Call`
+   - **URL**: Paste the Webhook URL
+   - **Custom Headers**: `x-wraith-webhook-secret: <your-secret>`
+3. Add `@webhook-Wraith On-Call` to your Datadog monitor notification fields.
+
+### Test
+
+```bash
+curl -X POST https://<your-wraith-url>/api/alerts/datadog/<your-org-id> \
+  -H "Content-Type: application/json" \
+  -H "x-wraith-webhook-secret: <your-secret>" \
+  -d '{
+    "event": {
+      "title": "High Error Rate on user-api",
+      "text": "Error rate exceeded 5% threshold",
+      "alert_type": "error",
+      "service": "user-api",
+      "environment": "production"
+    }
+  }'
+```
+
+
+## AWS CloudWatch
+
+**Endpoint**: `POST /api/alerts/cloudwatch/<orgId>`
+
+### Setup
+
+1. In **Wraith**: go to **Settings > Integrations > CloudWatch**. Copy the **Webhook URL**.
+2. Create an SNS topic:
+   ```bash
+   aws sns create-topic --name wraith-alerts
+   ```
+3. Subscribe the Wraith endpoint:
+   ```bash
+   aws sns subscribe \
+     --topic-arn arn:aws:sns:<region>:<account-id>:wraith-alerts \
+     --protocol https \
+     --notification-endpoint <webhook-url-from-wraith>
+   ```
+4. Wraith auto-confirms the SNS subscription.
+5. Attach CloudWatch alarms to the SNS topic.
+
+### CloudWatch Alert Ingestion vs Log Ingestion
+
+These are separate features:
+- **Alert ingestion** (this section): Receives alarm notifications via SNS webhooks.
+- **Log ingestion**: Pulls logs directly from the CloudWatch Logs API on a schedule. Contact your Wraith administrator to enable this.
+
+Both are recommended.
+
+
+## Sentry
+
+**Endpoint**: `POST /api/alerts/sentry/<orgId>`
+
+### Setup
+
+1. In **Wraith**: go to **Settings > Integrations > Sentry**. Copy the **Webhook URL** and **Secret**.
+2. In **Sentry**: go to **Settings > Integrations > Webhooks**.
+3. Add the Wraith webhook URL.
+4. Configure alert rules to send to the webhook.
+
+### Service Name Mapping
+
+Ensure Sentry's `serverName` matches your Wraith `serviceName`:
+
+```javascript
+Sentry.init({
+  dsn: '...',
+  serverName: 'user-api',  // Must match serviceName in Wraith SDK
+});
+```
+
+
+## PagerDuty
+
+**Endpoint**: `POST /api/alerts/pagerduty/<orgId>`
+
+### Setup
+
+1. In **Wraith**: go to **Settings > Integrations > PagerDuty**. Copy the **Webhook URL** and **Secret**.
+2. In **PagerDuty**: go to **Services > [Your Service] > Integrations > Add Integration**.
+   - Select **Generic Webhook (v3)**.
+   - Set the URL from Wraith.
+
+### Bidirectional Integration
+
+Wraith can also send notifications **to** PagerDuty. Set `PAGERDUTY_ROUTING_KEY` in your Wraith deployment.
+
+
+## Grafana
+
+**Endpoint**: `POST /api/alerts/grafana/<orgId>`
+
+### Setup
+
+1. In **Wraith**: go to **Settings > Integrations > Grafana**. Copy the **Webhook URL** and **Secret**.
+2. In **Grafana**: go to **Alerting > Contact Points > New Contact Point**.
+   - **Type**: Webhook
+   - **URL**: Paste the URL from Wraith
+   - **HTTP Headers**: `x-wraith-webhook-secret: <your-secret>`
+3. Route your alert rules to this contact point.
+
+
+## Opsgenie
+
+**Endpoint**: `POST /api/alerts/opsgenie/<orgId>`
+
+### Setup
+
+1. In **Wraith**: go to **Settings > Integrations > Opsgenie**. Copy the **Webhook URL** and **Secret**.
+2. In **Opsgenie**: go to **Teams > [Your Team] > Integrations > Add Integration > Webhook**.
+3. Set the URL and add the header: `x-wraith-webhook-secret: <your-secret>`
+4. Configure alert policies to forward relevant alerts.
+
+
+## Bugsnag
+
+**Endpoint**: `POST /api/alerts/bugsnag/<orgId>`
+
+### Setup
+
+1. In **Wraith**: go to **Settings > Integrations > Bugsnag**. Copy the **Webhook URL** and **Secret**.
+2. In **Bugsnag**: go to **Project Settings > Integrations > Webhook**.
+3. Set the URL and add the header: `x-wraith-webhook-secret: <your-secret>`
+4. Configure which events trigger the webhook.
+
+
+## Custom / Generic Webhooks
+
+For monitoring tools not listed above, use the generic alert format:
+
+```json
+{
+  "event": {
+    "title": "Alert title",
+    "text": "Alert description with context",
+    "alert_type": "error",
+    "service": "your-service-name",
+    "environment": "production"
+  }
+}
+```
+
+Send to any provider endpoint with the `x-wraith-webhook-secret` header.
+
+
+## Multiple Alert Sources
+
+You can connect multiple monitoring tools simultaneously. Wraith handles deduplication across sources via failure fingerprinting — if two tools fire for the same issue, Wraith creates a single incident.
+
+
+## Troubleshooting
+
+### Alert Not Received
+
+1. Copy the webhook URL directly from **Settings > Integrations**.
+2. Verify the webhook secret matches exactly.
+3. Check that your monitoring tool can reach the Wraith URL.
+
+### Alert Received but No Incident Created
+
+1. Layer 0 may have filtered it as noise. Check the audit log: `GET /api/layer0/audit`.
+2. The alert may match an existing open incident (deduplication).
+3. The alert must include a `service` name.
+
+### Service Name Mismatch
+
+The most common issue. Ensure the service name is identical across SDK, monitoring tool, and Wraith.
+
+
+## Next Steps
+
+- [Use the dashboard](/dashboard) to view and manage incidents
+- [SDK reference](/sdk-integration) for full instrumentation options
+- [API reference](/api-reference) for programmatic access
+

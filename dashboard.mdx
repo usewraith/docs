@@ -1,0 +1,128 @@
+---
+title: Dashboard
+description: Navigate incidents, services, runbooks, and settings
+---
+
+Your central view for monitoring incidents, investigating root causes, and managing your services.
+
+## Incidents
+
+**Path**: `/incidents`
+
+### Incident List
+
+- **Filter** by status (Escalated, Suppressed, Resolved), service, or time range
+- **Search** by title or description
+- **Sort** by creation time, severity, or status
+- Each incident shows its status, confidence score, and pipeline progress
+
+### Incident Detail
+
+Click any incident to see four tabs:
+
+#### Overview
+
+| Field | Description |
+|-------|-------------|
+| **Status** | RECEIVED, INVESTIGATING, ESCALATED, SUPPRESSED, RESOLVED |
+| **Confidence** | How confident Wraith is in its verdict (0-100%) |
+| **Service** | The affected service |
+| **Alert Source** | Which monitoring tool triggered the alert |
+| **Timeline** | Step-by-step progress through the pipeline |
+| **Summary** | AI-generated root cause and impact description |
+
+#### Evidence
+
+- **Root Cause Signals** — code paths, queries, or calls identified as the failure point
+- **Dependency Graph** — services involved in the incident
+- **Verification Report** — confidence level and supporting evidence
+
+#### Logs
+
+- **Pipeline Logs** — logs from each analysis step
+- **Application Logs** — relevant logs from around the alert time
+
+#### AutoFix
+
+When AutoFix is enabled and runs:
+- **Fix Status** — attempted, succeeded, or failed
+- **PR Link** — direct link to the GitHub pull request
+- **Patch Diff** — the generated code change
+
+### Actions
+
+- **Resolve** — mark as fixed
+- **Suppress** — mark as noise/false positive
+- **Feedback** — rate the verdict accuracy (improves future triage)
+
+
+## Services
+
+**Path**: `/services`
+
+| Column | Description |
+|--------|-------------|
+| **Name** | Service identifier |
+| **Status** | `up`, `degraded`, `down`, or `unknown` |
+| **Last Seen** | When last observed |
+| **Incidents** | Recent incident count |
+
+### Dependency Graph
+
+Visual graph of service-to-service dependencies. Use it to understand blast radius when a service fails.
+
+
+## Runbooks
+
+**Path**: `/runbooks`
+
+Create structured response procedures for common incidents.
+
+1. Click **Create Runbook** — define title, service, trigger conditions, and steps.
+2. When an incident matches, Wraith suggests the runbook.
+3. Click **Execute** to work through the steps, marking each as done.
+
+
+## Settings
+
+**Path**: `/settings`
+
+### API Keys
+
+Create, revoke, and monitor API keys. Used for SDK trace uploads, API access, and MCP connections.
+
+### Integrations
+
+Connect your monitoring tools and notification channels:
+
+| Integration | Purpose |
+|-------------|---------|
+| Datadog | Alert ingestion |
+| CloudWatch | Alert ingestion |
+| Sentry | Alert ingestion |
+| PagerDuty | Alerts + notifications |
+| Grafana | Alert ingestion |
+| Opsgenie | Alert ingestion |
+| Bugsnag | Alert ingestion |
+| Slack | Notifications |
+| GitHub | AutoFix PRs |
+
+Each integration shows its connection status, webhook URL, and a **Test** button.
+
+### Billing
+
+- View your current plan and credit usage
+- Upgrade from Free to Pro
+- Manage payment methods and invoices
+
+### Members
+
+Invite teammates, manage roles, and control access.
+
+
+## Next Steps
+
+- [Query incidents via the API](/api-reference)
+- [SDK reference](/sdk-integration)
+- [Connect more alert sources](/alert-integrations)
+
